@@ -148,6 +148,22 @@
             width: auto;
             margin-bottom: 10px;
         }
+
+        /* تنسيق التذييل (Footer) - تم تغيير اللون هنا */
+        footer {
+            background-color: #FFEB3B; /* لون أصفر */
+            padding: 25px;
+            text-align: center;
+            margin-top: 40px;
+            border-top: 1px solid #ddd;
+            color: #000; /* نص أسود لتناسب الخلفية الصفراء */
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        footer p {
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -272,6 +288,12 @@
     </div>
 
 </div>
+
+<!-- قسم التذييل (Footer) -->
+<footer>
+    <p>جميع الحقوق محفوظة © 2026</p>
+    <p>بواسطة مطور التطبيقات عبدالله هزازي</p>
+</footer>
 
 <script>
     let targetCalories = 2000;
@@ -445,7 +467,6 @@
     function saveData() {
         localStorage.setItem('mealTracker_v3_log', JSON.stringify(mealLog));
         localStorage.setItem('mealTracker_v3_target', targetCalories);
-        // نحفظ البيانات المدخلة أيضاً لحساب الـ BMI تلقائياً عند العودة
         localStorage.setItem('mealTracker_v3_weight', document.getElementById('weight').value);
         localStorage.setItem('mealTracker_v3_height', document.getElementById('height').value);
         localStorage.setItem('mealTracker_v3_age', document.getElementById('age').value);
@@ -464,7 +485,6 @@
             targetCalories = parseInt(savedTarget);
         }
 
-        // استرجاع البيانات المدخلة وملء الحقول
         const savedWeight = localStorage.getItem('mealTracker_v3_weight');
         const savedHeight = localStorage.getItem('mealTracker_v3_height');
         const savedAge = localStorage.getItem('mealTracker_v3_age');
@@ -478,7 +498,6 @@
             document.getElementById('gender').value = savedGender;
             document.getElementById('activity').value = savedActivity;
             
-            // إذا كانت البيانات موجودة نقوم بالحساب تلقائياً لإظهار الـ BMI
             calculateNeeds();
         }
     }
