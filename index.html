@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متابعة السعرات والصحة (مع BMI)</title>
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --secondary: #FF9800;
+            --accent: #2196F3;
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* تنسيق صناديق الوجبات */
+        .meal-card {
+            border-top: 4px solid var(--secondary);
+        }
+
+        .food-list {
+            list-style: none;
+            padding: 0;
+            min-height: 50px;
+        }
+
+        .food-item {
+            background: #f9f9f9;
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .delete-btn {
+            background-color: #ff4444;
+            width: auto;
+            padding: 5px 10px;
+            margin: 0;
+            font-size: 12px;
+        }
+
+        /* ملخص شامل في الأعلى */
+        .main-summary {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+        }
+
+        .summary-box h3 { margin: 0; font-size: 1rem; opacity: 0.9; }
+        .summary-box p { margin: 5px 0 0; font-size: 1.5rem; font-weight: bold; }
+
+        /* تنسيق نتائج الحسابات */
+        .calculation-results {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            display: none; /* مخفي حتى الحساب */
+        }
+
+        .bmi-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .details-toggle {
+            background: #2196F3;
+            font-size: 12px;
+            padding: 5px;
+            width: auto;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>جدول السعرات والصحة</h1>
+
+    <!-- الملخص العام -->
+    <div class="main-summary">
+        <div class="summary-box">
+            <h3>المأكول اليوم</h3>
+            <p id="totalEaten">0</p>
+        </div>
+        <div class="summary-box">
+            <h3>المتبقي</h3>
+            <p id="remainingCalories">--</p>
+        </div>
+    </div>
+
+    <!-- قسم البيانات الشخصية -->
+    <div class="card">
+        <button class="details-toggle" onclick="toggleDetails()">إخفاء / إظهار إعدادات الجسم</button>
+        <div id="personalDetails" style="display:none;">
+            <h2>حساب السعرات و BMI</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                    <label>الوزن (كجم):</label>
+                    <input type="number" id="weight" placeholder="70">
+                </div>
+                <div class="form-group">
+                    <label>الطول (سم):</label>
+                    <input type="number" id="height" placeholder="175">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                    <label>العمر:</label>
+                    <input type="number" id="age" placeholder="25">
+                </div>
+                <div class="form-group">
+                    <label>الجنس:</label>
+                    <select id="gender">
+                        <option value="male">ذكر</option>
+                        <option value="female">أنثى</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>مستوى النشاط:</label>
+                <select id="activity">
+                    <option value="1.2">خامل</option>
+                    <option value="1.375">خفيف</option>
+                    <option value="1.55">متوسط</option>
+                    <option value="1.725">نشيط</option>
+                </select>
+            </div>
+            <button onclick="calculateNeeds()">احسب (السعرات + مؤشر كتلة الجسم)</button>
+            
+            <div id="healthResults" class="calculation-results">
+                <p style="margin: 5px 0;">احتياجك اليومي: <strong id="targetDisplay" style="color: var(--primary);"></strong> سعرة</p>
+                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ccc;">
+                <p style="margin: 5px 0;">مؤشر كتلة الجسم: <strong id="bmiValue"></strong></p>
+                <span id="bmiStatus" class="bmi-badge"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- منطقة إضافة الطعام -->
+    <div class="card" style="border: 2px solid var(--primary);">
+        <h2 style="margin-top:0;">➕ إضافة طعام</h2>
+        <div class="form-group">
+            <label>إلى أي وجبة؟</label>
+            <select id="mealSelect" style="font-weight:bold; background-color: #f0f8ff;">
+                <option value="فطور">🍳 الفطور</option>
+                <option value="غدا">🍗 الغدا</option>
+                <option value="عشاء">🌙 العشاء</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>نوع الطعام:</label>
+            <select id="foodSelect" onchange="calculatePreview()">
+                <option value="rice" data-cal="130">أرز (أبيض) - 130/100جم</option>
+                <option value="bread" data-cal="265">خبز عربي - 265/100جم</option>
+                <option value="chicken" data-cal="165">دجاج (صدر) - 165/100جم</option>
+                <option value="meat" data-cal="250">لحم أحمر - 250/100جم</option>
+                <option value="egg" data-cal="155">بيضة - 155/100جم</option>
+                <option value="lentils" data-cal="116">عدس - 116/100جم</option>
+                <option value="oil" data-cal="884">زيت/طحينية - 884/100جم</option>
+                <option value="apple" data-cal="52">تفاحة - 52/100جم</option>
+                <option value="banana" data-cal="89">موزة - 89/100جم</option>
+                <option value="yogurt" data-cal="59">زبادي - 59/100جم</option>
+                <option value="cheese" data-cal="350">جبن - 350/100جم</option>
+                <option value="milk" data-cal="65">حليب - 65/100جم</option>
+                <option value="coffee" data-cal="2">قهوة/شاي (بدون سكر) - 2/100جم</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>الكمية (جرام):</label>
+            <input type="number" id="foodQty" placeholder="100" oninput="calculatePreview()">
+        </div>
+        <p style="text-align: center; margin-bottom: 10px;">سعرات هذه الإضافة: <strong id="previewCalories">0</strong> سعرة</p>
+        <button onclick="addFood()">إضافة للقائمة</button>
+    </div>
+
+    <!-- صناديق الوجبات -->
+    <div class="card meal-card">
+        <h3>🍳 وجبة الفطور</h3>
+        <ul id="list-fotor" class="food-list"></ul>
+        <p style="text-align: left; color: #666; font-size: 0.9em;">مجموع الفطور: <span id="sum-fotor">0</span> سعرة</p>
+    </div>
+
+    <div class="card meal-card">
+        <h3>🍗 وجبة الغدا</h3>
+        <ul id="list-ghada" class="food-list"></ul>
+        <p style="text-align: left; color: #666; font-size: 0.9em;">مجموع الغدا: <span id="sum-ghada">0</span> سعرة</p>
+    </div>
+
+    <div class="card meal-card">
+        <h3>🌙 وجبة العشاء</h3>
+        <ul id="list-asha" class="food-list"></ul>
+        <p style="text-align: left; color: #666; font-size: 0.9em;">مجموع العشاء: <span id="sum-asha">0</span> سعرة</p>
+    </div>
+
+</div>
+
+<script>
+    let targetCalories = 2000;
+    let mealLog = {
+        'فطور': [],
+        'غدا': [],
+        'عشاء': []
+    };
+
+    window.onload = function() {
+        loadData();
+        renderAllMeals();
+        updateTotals();
+    };
+
+    function calculateNeeds() {
+        const weight = parseFloat(document.getElementById('weight').value);
+        const height = parseFloat(document.getElementById('height').value);
+        const age = parseFloat(document.getElementById('age').value);
+        const gender = document.getElementById('gender').value;
+        const activity = parseFloat(document.getElementById('activity').value);
+
+        if (!weight || !height || !age) {
+            alert("الرجاء إدخال الوزن، الطول والعمر");
+            return;
+        }
+
+        // 1. حساب السعرات (BMR & TDEE)
+        let bmr;
+        if (gender === 'male') {
+            bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+        } else {
+            bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
+        }
+        targetCalories = Math.round(bmr * activity);
+
+        // 2. حساب مؤشر كتلة الجسم (BMI)
+        const heightInMeters = height / 100;
+        const bmi = (weight / (heightInMeters * heightInMeters)).toFixed(1);
+        
+        // تصنيف BMI
+        let bmiCategory = "";
+        let colorCode = "";
+        if (bmi < 18.5) {
+            bmiCategory = "نحافة";
+            colorCode = "#2196F3"; // أزرق
+        } else if (bmi >= 18.5 && bmi < 24.9) {
+            bmiCategory = "وزن مثالي";
+            colorCode = "#4CAF50"; // أخضر
+        } else if (bmi >= 25 && bmi < 29.9) {
+            bmiCategory = "زيادة وزن";
+            colorCode = "#FF9800"; // برتقالي
+        } else {
+            bmiCategory = "سمنة";
+            colorCode = "#f44336"; // أحمر
+        }
+
+        // عرض النتائج
+        document.getElementById('targetDisplay').innerText = targetCalories;
+        document.getElementById('bmiValue').innerText = bmi;
+        
+        const statusEl = document.getElementById('bmiStatus');
+        statusEl.innerText = bmiCategory;
+        statusEl.style.backgroundColor = colorCode;
+        
+        document.getElementById('healthResults').style.display = 'block';
+        
+        updateTotals();
+    }
+
+    function calculatePreview() {
+        const select = document.getElementById('foodSelect');
+        const calPer100g = parseFloat(select.options[select.selectedIndex].getAttribute('data-cal'));
+        const qty = parseFloat(document.getElementById('foodQty').value) || 0;
+        const total = Math.round((calPer100g * qty) / 100);
+        document.getElementById('previewCalories').innerText = total;
+        return total;
+    }
+
+    function addFood() {
+        const mealType = document.getElementById('mealSelect').value;
+        const select = document.getElementById('foodSelect');
+        const foodName = select.options[select.selectedIndex].text.split('-')[0];
+        const qty = document.getElementById('foodQty').value;
+        const itemCalories = calculatePreview();
+
+        if (qty <= 0) {
+            alert("يرجى كتابة كمية صحيحة");
+            return;
+        }
+
+        mealLog[mealType].push({
+            name: foodName,
+            qty: qty,
+            cal: itemCalories
+        });
+
+        saveData();
+        
+        document.getElementById('foodQty').value = '';
+        document.getElementById('previewCalories').innerText = '0';
+        
+        renderAllMeals();
+        updateTotals();
+    }
+
+    function removeFood(mealType, index) {
+        mealLog[mealType].splice(index, 1);
+        saveData();
+        renderAllMeals();
+        updateTotals();
+    }
+
+    function renderAllMeals() {
+        renderSingleMeal('فطور', 'list-fotor', 'sum-fotor');
+        renderSingleMeal('غدا', 'list-ghada', 'sum-ghada');
+        renderSingleMeal('عشاء', 'list-asha', 'sum-asha');
+    }
+
+    function renderSingleMeal(mealType, listElementId, sumElementId) {
+        const ul = document.getElementById(listElementId);
+        ul.innerHTML = '';
+        const items = mealLog[mealType];
+        let mealSum = 0;
+
+        items.forEach((item, index) => {
+            mealSum += item.cal;
+            const li = document.createElement('li');
+            li.className = 'food-item';
+            li.innerHTML = `
+                <span>${item.name} (${item.qty} جم)</span>
+                <div>
+                    <span style="margin-left:10px; font-weight:bold;">${item.cal} سعرة</span>
+                    <button class="delete-btn" onclick="removeFood('${mealType}', ${index})">x</button>
+                </div>
+            `;
+            ul.appendChild(li);
+        });
+
+        if(items.length === 0) {
+            ul.innerHTML = '<li style="text-align:center; color:#ccc; font-size:0.8em;">لا توجد عناصر</li>';
+        }
+
+        document.getElementById(sumElementId).innerText = mealSum;
+    }
+
+    function updateTotals() {
+        let totalEaten = 0;
+        Object.values(mealLog).forEach(items => {
+            totalEaten += items.reduce((sum, item) => sum + item.cal, 0);
+        });
+
+        document.getElementById('totalEaten').innerText = totalEaten;
+        
+        const remaining = targetCalories - totalEaten;
+        const remainingEl = document.getElementById('remainingCalories');
+        remainingEl.innerText = remaining;
+        
+        if(remaining < 0) {
+            remainingEl.style.color = '#ffcccc';
+        } else {
+            remainingEl.style.color = 'white';
+        }
+    }
+
+    function toggleDetails() {
+        const div = document.getElementById('personalDetails');
+        div.style.display = div.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function saveData() {
+        localStorage.setItem('mealTracker_v3_log', JSON.stringify(mealLog));
+        localStorage.setItem('mealTracker_v3_target', targetCalories);
+        // نحفظ البيانات المدخلة أيضاً لحساب الـ BMI تلقائياً عند العودة
+        localStorage.setItem('mealTracker_v3_weight', document.getElementById('weight').value);
+        localStorage.setItem('mealTracker_v3_height', document.getElementById('height').value);
+        localStorage.setItem('mealTracker_v3_age', document.getElementById('age').value);
+        localStorage.setItem('mealTracker_v3_gender', document.getElementById('gender').value);
+        localStorage.setItem('mealTracker_v3_activity', document.getElementById('activity').value);
+    }
+
+    function loadData() {
+        const savedLog = localStorage.getItem('mealTracker_v3_log');
+        const savedTarget = localStorage.getItem('mealTracker_v3_target');
+
+        if (savedLog) {
+            mealLog = JSON.parse(savedLog);
+        }
+        if (savedTarget) {
+            targetCalories = parseInt(savedTarget);
+        }
+
+        // استرجاع البيانات المدخلة وملء الحقول
+        const savedWeight = localStorage.getItem('mealTracker_v3_weight');
+        const savedHeight = localStorage.getItem('mealTracker_v3_height');
+        const savedAge = localStorage.getItem('mealTracker_v3_age');
+        const savedGender = localStorage.getItem('mealTracker_v3_gender');
+        const savedActivity = localStorage.getItem('mealTracker_v3_activity');
+
+        if (savedWeight && savedHeight && savedAge) {
+            document.getElementById('weight').value = savedWeight;
+            document.getElementById('height').value = savedHeight;
+            document.getElementById('age').value = savedAge;
+            document.getElementById('gender').value = savedGender;
+            document.getElementById('activity').value = savedActivity;
+            
+            // إذا كانت البيانات موجودة نقوم بالحساب تلقائياً لإظهار الـ BMI
+            calculateNeeds();
+        }
+    }
+</script>
+
+</body>
+</html>
